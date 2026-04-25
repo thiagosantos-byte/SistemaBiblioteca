@@ -1,0 +1,1442 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BiblioTech — Sistema de Biblioteca</title>
+<style>
+:root{
+  --primary:#6C63FF;--primary-d:#5a52e0;--primary-l:#ede9ff;
+  --accent:#43D9AD;--warning:#FFA94D;--danger:#FF6B6B;--info:#38BDF8;
+  --dark:#1a1a2e;--dark2:#16213e;
+  --bg:#f4f6fb;--card:#fff;--border:#e8eaf0;
+  --text:#1e1e2e;--muted:#7a7a9a;
+  --r:16px;--sh:0 4px 24px rgba(108,99,255,.10);--sh2:0 8px 40px rgba(108,99,255,.18);
+  --tr:all .22s cubic-bezier(.4,0,.2,1);
+  --sidebar:260px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d0d0e8;border-radius:99px}
+
+/* ══════════════════ LOGIN ══════════════════ */
+#login{display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+  position:relative;overflow:hidden}
+#login::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 20% 50%,rgba(108,99,255,.15) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 20%,rgba(255,101,132,.1) 0%,transparent 50%)}
+.login-box{position:relative;z-index:1;background:rgba(255,255,255,.05);
+  backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.1);
+  border-radius:28px;padding:48px 44px;width:100%;max-width:440px;
+  box-shadow:0 32px 80px rgba(0,0,0,.5);animation:fadeUp .5s ease}
+.login-brand{display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:10px}
+.login-brand .ico{width:56px;height:56px;background:linear-gradient(135deg,#6C63FF,#FF6584);
+  border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;
+  box-shadow:0 8px 24px rgba(108,99,255,.4)}
+.login-brand h1{color:#fff;font-size:30px;font-weight:800;letter-spacing:-.5px}
+.login-brand h1 span{color:#a78bfa}
+.login-sub{color:rgba(255,255,255,.4);text-align:center;font-size:13px;margin-bottom:32px}
+.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:28px}
+.r-card{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:14px 8px;cursor:pointer;transition:var(--tr);text-align:center;
+  color:rgba(255,255,255,.6);font-size:12px;font-weight:600;letter-spacing:.3px}
+.r-card .ri{font-size:26px;display:block;margin-bottom:6px}
+.r-card:hover{background:rgba(108,99,255,.15);border-color:rgba(108,99,255,.4);color:#fff}
+.r-card.on{background:rgba(108,99,255,.2);border-color:#6C63FF;color:#fff;
+  box-shadow:0 0 24px rgba(108,99,255,.25)}
+.f-grp{margin-bottom:16px}
+.f-grp label{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:7px;letter-spacing:.5px;text-transform:uppercase}
+.f-grp input{width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:13px 16px;color:#fff;font-size:15px;outline:none;transition:var(--tr)}
+.f-grp input:focus{border-color:#6C63FF;background:rgba(108,99,255,.12);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
+.f-grp input::placeholder{color:rgba(255,255,255,.25)}
+.btn-login{width:100%;background:linear-gradient(135deg,#6C63FF,#9b8eff);color:#fff;
+  border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;
+  cursor:pointer;transition:var(--tr);letter-spacing:.3px;margin-top:4px}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(108,99,255,.5)}
+.btn-login:active{transform:translateY(0)}
+.login-tip{text-align:center;margin-top:20px;color:rgba(255,255,255,.25);font-size:12px}
+.login-tip b{color:rgba(108,99,255,.7)}
+.login-err{background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.3);
+  color:#ff9f9f;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+
+/* ══════════════════ LAYOUT ══════════════════ */
+#app{display:none;min-height:100vh}
+
+/* SIDEBAR */
+.sb{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar);
+  background:var(--dark);z-index:200;display:flex;flex-direction:column;
+  transition:var(--tr);box-shadow:4px 0 30px rgba(0,0,0,.18)}
+.sb-head{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sb-brand{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sb-brand .ico{width:38px;height:38px;background:linear-gradient(135deg,#6C63FF,#FF6584);
+  border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sb-brand h2{color:#fff;font-size:19px;font-weight:800}
+.sb-brand h2 span{color:#a78bfa}
+.sb-user{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);
+  border-radius:12px;padding:10px 12px}
+.sb-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.sb-uname{color:#fff;font-size:13px;font-weight:600}
+.sb-urole{color:rgba(255,255,255,.38);font-size:11px;margin-top:1px}
+.sb-nav{flex:1;padding:12px;overflow-y:auto}
+.nav-sec-lbl{color:rgba(255,255,255,.28);font-size:10px;font-weight:700;
+  letter-spacing:1.8px;text-transform:uppercase;padding:0 10px;margin:16px 0 6px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;
+  border-radius:12px;cursor:pointer;color:rgba(255,255,255,.5);
+  font-size:13.5px;font-weight:500;transition:var(--tr);margin-bottom:2px;
+  border:none;background:none;width:100%;text-align:left;border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.nav-item.on{background:rgba(108,99,255,.18);color:#fff;border-left-color:#6C63FF}
+.nav-ico{font-size:17px;width:20px;text-align:center;flex-shrink:0}
+.nav-lbl{flex:1}
+.nav-badge{background:var(--danger);color:#fff;font-size:11px;font-weight:700;
+  padding:2px 7px;border-radius:99px;min-width:20px;text-align:center}
+.nav-badge.warn{background:var(--warning)}
+.sb-foot{padding:12px;border-top:1px solid rgba(255,255,255,.06)}
+.btn-out{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:12px;cursor:pointer;color:rgba(255,255,255,.4);
+  font-size:13.5px;background:none;border:none;transition:var(--tr)}
+.btn-out:hover{background:rgba(255,107,107,.12);color:var(--danger)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar);padding:32px;min-height:100vh;transition:var(--tr)}
+.page{display:none;animation:fadeIn .28s ease}
+.page.on{display:block}
+
+/* PAGE HEADER */
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.ph-t h2{font-size:25px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.ph-t p{color:var(--muted);font-size:13px;margin-top:3px}
+.ph-act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:16px;margin-bottom:24px}
+.sc{background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--sh);
+  border:1px solid var(--border);transition:var(--tr);display:flex;align-items:center;gap:14px;
+  position:relative;overflow:hidden}
+.sc::after{content:'';position:absolute;right:-20px;top:-20px;width:80px;height:80px;
+  border-radius:50%;opacity:.06;background:currentColor;transform:scale(2)}
+.sc:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
+.sc-ico{width:50px;height:50px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.sc-v{font-size:28px;font-weight:800;color:var(--text);line-height:1}
+.sc-l{font-size:12px;color:var(--muted);margin-top:3px}
+.sc-d{font-size:12px;font-weight:600;margin-top:5px}
+
+/* CARD */
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border)}
+.card-h{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 16px}
+.card-t{font-size:15px;font-weight:700;color:var(--text)}
+.card-b{padding:0 22px 20px}
+.card-b.np{padding:0}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;
+  border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;
+  transition:var(--tr);border:none;outline:none;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-p{background:linear-gradient(135deg,#6C63FF,#9b8eff);color:#fff}
+.btn-p:hover{box-shadow:0 6px 20px rgba(108,99,255,.4);transform:translateY(-1px)}
+.btn-s{background:linear-gradient(135deg,#43D9AD,#2bc49a);color:#fff}
+.btn-s:hover{box-shadow:0 6px 20px rgba(67,217,173,.35)}
+.btn-w{background:linear-gradient(135deg,#FFA94D,#ff8c00);color:#fff}
+.btn-w:hover{box-shadow:0 6px 20px rgba(255,169,77,.35)}
+.btn-d{background:linear-gradient(135deg,#FF6B6B,#ff4444);color:#fff}
+.btn-d:hover{box-shadow:0 6px 20px rgba(255,107,107,.35)}
+.btn-o{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.btn-o:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-l)}
+.btn-sm{padding:7px 13px;font-size:12.5px;border-radius:9px;gap:5px}
+.btn-xs{padding:5px 10px;font-size:12px;border-radius:8px;gap:4px}
+
+/* SEARCH */
+.srch{position:relative}
+.srch input{width:100%;padding:10px 16px 10px 40px;border-radius:11px;
+  border:1.5px solid var(--border);background:var(--card);font-size:13.5px;
+  outline:none;transition:var(--tr);color:var(--text)}
+.srch input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,99,255,.1)}
+.srch .si{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+
+/* TABLE */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.8px;padding:12px 16px;
+  border-bottom:2px solid var(--border);background:#fafafa;white-space:nowrap}
+td{padding:13px 16px;font-size:13.5px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:var(--tr)}
+tbody tr:hover td{background:rgba(108,99,255,.025)}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;
+  border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.bg-ok{background:rgba(67,217,173,.15);color:#0e8c63}
+.bg-warn{background:rgba(255,169,77,.15);color:#b06400}
+.bg-err{background:rgba(255,107,107,.15);color:#c0392b}
+.bg-p{background:rgba(108,99,255,.15);color:#5a52e0}
+.bg-i{background:rgba(56,189,248,.15);color:#0284c7}
+.bg-sec{background:rgba(122,122,154,.12);color:var(--muted)}
+.bg-gold{background:rgba(255,193,7,.15);color:#a07800}
+
+/* FILTER CHIPS */
+.fc-wrap{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.fc{padding:6px 14px;border-radius:99px;border:1.5px solid var(--border);
+  background:var(--card);font-size:12.5px;cursor:pointer;transition:var(--tr);color:var(--muted)}
+.fc:hover,.fc.on{border-color:var(--primary);color:var(--primary);background:var(--primary-l)}
+
+/* BOOK GRID */
+.bg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:18px}
+.bk-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);
+  overflow:hidden;transition:var(--tr);cursor:pointer;box-shadow:var(--sh)}
+.bk-card:hover{transform:translateY(-5px);box-shadow:var(--sh2)}
+.bk-cover{height:155px;display:flex;align-items:center;justify-content:center;
+  position:relative;font-size:54px}
+.bk-avail{position:absolute;top:8px;right:8px}
+.bk-info{padding:13px}
+.bk-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:3px;
+  line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bk-auth{font-size:12px;color:var(--muted);margin-bottom:8px}
+
+/* FORM */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--muted);
+  margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;
+  border:1.5px solid var(--border);border-radius:10px;font-size:14px;
+  outline:none;transition:var(--tr);background:var(--card);color:var(--text)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(108,99,255,.08)}
+.field textarea{resize:vertical;min-height:80px}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(15,12,41,.6);backdrop-filter:blur(6px);
+  z-index:1000;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .22s ease;padding:20px}
+.mo.open{opacity:1;pointer-events:all}
+.mo-box{background:var(--card);border-radius:22px;padding:32px;
+  width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,.22);
+  transform:scale(.95) translateY(20px);transition:var(--tr)}
+.mo.open .mo-box{transform:scale(1) translateY(0)}
+.mo-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.mo-title{font-size:19px;font-weight:800;color:var(--text)}
+.btn-x{background:var(--bg);border:none;width:32px;height:32px;border-radius:50%;
+  font-size:17px;cursor:pointer;transition:var(--tr);color:var(--muted);
+  display:flex;align-items:center;justify-content:center}
+.btn-x:hover{background:var(--danger);color:#fff}
+
+/* TABS */
+.tabs{display:flex;gap:4px;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:20px}
+.tab{flex:1;padding:8px;border-radius:9px;border:none;background:none;
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:var(--tr);white-space:nowrap}
+.tab.on{background:var(--card);color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+
+/* TIMELINE */
+.tl{position:relative;padding-left:22px}
+.tl::before{content:'';position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.tl-it{position:relative;margin-bottom:18px}
+.tl-dot{position:absolute;left:-19px;top:5px;width:12px;height:12px;border-radius:50%;border:2px solid}
+.tl-t{font-size:13.5px;font-weight:600;color:var(--text)}
+.tl-m{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* PROGRESS */
+.pb{height:7px;background:var(--bg);border-radius:99px;overflow:hidden}
+.pb-fill{height:100%;border-radius:99px;transition:width .6s ease}
+
+/* TOAST */
+#toast-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--dark);color:#fff;border-radius:12px;padding:13px 18px;
+  font-size:13.5px;display:flex;align-items:center;gap:10px;
+  box-shadow:0 8px 28px rgba(0,0,0,.25);animation:slideIn .3s ease;
+  min-width:270px;max-width:340px;pointer-events:all;border-left:4px solid}
+.toast.ok{border-color:var(--accent)}
+.toast.er{border-color:var(--danger)}
+.toast.wa{border-color:var(--warning)}
+.toast.in{border-color:var(--info)}
+
+/* EMPTY */
+.empty{text-align:center;padding:52px 20px;color:var(--muted)}
+.empty .ei{font-size:56px;margin-bottom:14px;opacity:.35}
+.empty h3{font-size:17px;color:var(--text);margin-bottom:6px}
+.empty p{font-size:13px}
+
+/* FINE SYSTEM */
+.fine-box{background:linear-gradient(135deg,rgba(255,107,107,.08),rgba(255,169,77,.06));
+  border:1.5px solid rgba(255,107,107,.2);border-radius:14px;padding:16px 20px;margin-bottom:20px}
+.fine-box.paid{background:rgba(67,217,173,.06);border-color:rgba(67,217,173,.2)}
+.fine-val{font-size:24px;font-weight:800;color:var(--danger)}
+.fine-val.paid{color:var(--accent)}
+.fine-desc{font-size:13px;color:var(--muted);margin-top:3px}
+
+/* CHIP SELECT */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:5px 13px;border-radius:99px;border:1.5px solid var(--border);
+  font-size:13px;cursor:pointer;transition:var(--tr)}
+.chip.on{border-color:var(--primary);background:var(--primary-l);color:var(--primary);font-weight:600}
+
+/* AVATAR */
+.av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.av-p{background:linear-gradient(135deg,#6C63FF,#9b8eff)}
+.av-b{background:linear-gradient(135deg,#FF6584,#ff8fa3)}
+.av-l{background:linear-gradient(135deg,#43D9AD,#2bc49a)}
+
+/* DIVIDER */
+.div{display:flex;align-items:center;gap:10px;margin:20px 0}
+.div hr{flex:1;border:none;border-top:1px solid var(--border)}
+.div span{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+
+/* QUICK STAT ROW */
+.qstat{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.qstat:last-child{border-bottom:none}
+.qstat-l{font-size:13.5px;font-weight:600}
+.qstat-r{font-size:13.5px;color:var(--muted)}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  :root{--sidebar:60px}
+  .sb-brand h2,.sb-uname,.sb-urole,.nav-lbl,.nav-sec-lbl,.btn-out span,.sb-user .sb-uname,.sb-user .sb-urole{display:none}
+  .nav-item{justify-content:center;padding:10px}
+  .sb-user{justify-content:center}
+  .main{padding:20px}
+  .frow,.g2,.g3{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .stats{grid-template-columns:1fr 1fr}
+  .bg-grid{grid-template-columns:1fr 1fr}
+  .ph{flex-direction:column;align-items:flex-start}
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse{animation:pulse 1.5s infinite}
+</style>
+</head>
+<body>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="login">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="ico">📚</div>
+      <h1>Biblio<span>Tech</span></h1>
+    </div>
+    <p class="login-sub">Sistema de Gerenciamento de Biblioteca</p>
+    <div id="login-err" class="login-err"></div>
+
+    <p style="color:rgba(255,255,255,.4);font-size:11px;margin-bottom:10px;text-align:center;letter-spacing:.5px;text-transform:uppercase">Selecione seu perfil</p>
+    <div class="role-grid">
+      <div class="r-card on" data-role="suporte" onclick="pickRole('suporte',this)"><span class="ri">🛡️</span>Suporte</div>
+      <div class="r-card" data-role="bibliotecario" onclick="pickRole('bibliotecario',this)"><span class="ri">📖</span>Bibliotecário</div>
+      <div class="r-card" data-role="leitor" onclick="pickRole('leitor',this)"><span class="ri">👤</span>Leitor</div>
+    </div>
+    <div class="f-grp"><label>Usuário</label><input id="l-u" type="text" placeholder="Digite seu usuário" autocomplete="username"></div>
+    <div class="f-grp"><label>Senha</label><input id="l-p" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-login" onclick="doLogin()">Entrar no Sistema →</button>
+    <p class="login-tip">Demo → usuário: <b>admin</b> / senha: <b>1234</b></p>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <nav class="sb" id="sb">
+    <div class="sb-head">
+      <div class="sb-brand"><div class="ico" style="width:38px;height:38px;border-radius:11px;font-size:18px">📚</div><h2>Biblio<span>Tech</span></h2></div>
+      <div class="sb-user"><div class="av" id="s-av">👤</div><div><div class="sb-uname" id="s-name">—</div><div class="sb-urole" id="s-role">—</div></div></div>
+    </div>
+    <div class="sb-nav" id="sb-nav"></div>
+    <div class="sb-foot"><button class="btn-out" onclick="doLogout()"><span>🚪</span><span>Sair</span></button></div>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="main" id="main">
+
+    <!-- DASHBOARD -->
+    <div class="page" id="pg-dashboard">
+      <div class="ph"><div class="ph-t"><h2 id="d-title">Dashboard</h2><p id="d-sub">Visão geral</p></div><div class="ph-act" id="d-act"></div></div>
+      <div class="stats" id="d-stats"></div>
+      <div class="g2" id="d-body"></div>
+    </div>
+
+    <!-- LIVROS -->
+    <div class="page" id="pg-books">
+      <div class="ph">
+        <div class="ph-t"><h2>Acervo de Livros</h2><p>Gerencie o catálogo</p></div>
+        <div class="ph-act">
+          <div class="srch" style="width:240px"><span class="si">🔍</span><input type="text" placeholder="Buscar livro..." id="bk-q" oninput="filterBooks()"></div>
+          <div id="bk-add-btn"></div>
+        </div>
+      </div>
+      <div class="fc-wrap" id="bk-filters"></div>
+      <div class="bg-grid" id="bk-grid"></div>
+    </div>
+
+    <!-- EMPRÉSTIMOS -->
+    <div class="page" id="pg-loans">
+      <div class="ph"><div class="ph-t"><h2>Empréstimos</h2><p>Controle de retiradas e devoluções</p></div><div class="ph-act" id="ln-act"></div></div>
+      <div class="card">
+        <div class="card-h" style="padding-bottom:4px"><div class="tabs" id="ln-tabs" style="flex:1;margin:0"></div></div>
+        <div class="card-b np"><div class="tw"><table><thead id="ln-head"></thead><tbody id="ln-body"></tbody></table></div></div>
+      </div>
+    </div>
+
+    <!-- MULTAS -->
+    <div class="page" id="pg-fines">
+      <div class="ph"><div class="ph-t"><h2>💰 Sistema de Multas</h2><p>Gestão de multas por atraso</p></div><div class="ph-act" id="fn-act"></div></div>
+      <div class="stats" id="fn-stats"></div>
+      <div class="card">
+        <div class="card-h"><span class="card-t">Registros de Multas</span>
+          <div style="display:flex;gap:8px">
+            <div class="srch" style="width:220px"><span class="si">🔍</span><input type="text" placeholder="Buscar leitor..." id="fn-q" oninput="filterFines()"></div>
+          </div>
+        </div>
+        <div class="card-b np"><div class="tw"><table><thead id="fn-head"></thead><tbody id="fn-body"></tbody></table></div></div>
+      </div>
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div class="page" id="pg-users">
+      <div class="ph"><div class="ph-t"><h2>Usuários</h2><p>Gestão de contas</p></div>
+        <button class="btn btn-p btn-sm" onclick="openMo('mo-user')">➕ Novo Usuário</button>
+      </div>
+      <div class="card"><div class="card-b np"><div class="tw">
+        <table><thead><tr><th>Usuário</th><th>Perfil</th><th>Status</th><th>Empréstimos</th><th>Multas</th><th>Cadastro</th><th>Ações</th></tr></thead>
+        <tbody id="us-body"></tbody></table>
+      </div></div></div>
+    </div>
+
+    <!-- RELATÓRIOS -->
+    <div class="page" id="pg-reports">
+      <div class="ph"><div class="ph-t"><h2>Relatórios</h2><p>Análises e estatísticas</p></div></div>
+      <div class="stats" id="rp-stats" style="margin-bottom:24px"></div>
+      <div class="g2" style="margin-bottom:20px">
+        <div class="card"><div class="card-h"><span class="card-t">📊 Gêneros Populares</span></div><div class="card-b" id="rp-genre"></div></div>
+        <div class="card"><div class="card-h"><span class="card-t">📅 Empréstimos por Mês</span></div><div class="card-b" id="rp-months"></div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="card-h"><span class="card-t">🏆 Top Livros</span></div><div class="card-b np"><div class="tw"><table><thead><tr><th>#</th><th>Livro</th><th>Empréstimos</th></tr></thead><tbody id="rp-top"></tbody></table></div></div></div>
+        <div class="card"><div class="card-h"><span class="card-t">💰 Multas por Mês</span></div><div class="card-b" id="rp-fines"></div></div>
+      </div>
+    </div>
+
+    <!-- PERFIL -->
+    <div class="page" id="pg-profile">
+      <div class="ph"><div class="ph-t"><h2>Meu Perfil</h2><p>Informações e histórico</p></div></div>
+      <div class="g2"><div class="card"><div class="card-b" id="pf-info"></div></div>
+        <div class="card"><div class="card-h"><span class="card-t">📖 Histórico</span></div><div class="card-b"><div class="tl" id="pf-hist"></div></div></div>
+      </div>
+    </div>
+
+    <!-- SOLICITAÇÕES (leitor) -->
+    <div class="page" id="pg-requests">
+      <div class="ph"><div class="ph-t"><h2>Minhas Solicitações</h2><p>Pedidos de empréstimo</p></div></div>
+      <div class="card"><div class="card-b np"><div class="tw">
+        <table><thead><tr><th>Livro</th><th>Solicitado em</th><th>Devolução Prev.</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="rq-body"></tbody></table>
+      </div></div></div>
+    </div>
+
+    <!-- MINHAS MULTAS (leitor) -->
+    <div class="page" id="pg-myfines">
+      <div class="ph"><div class="ph-t"><h2>💰 Minhas Multas</h2><p>Multas e situação financeira</p></div></div>
+      <div class="stats" id="mf-stats"></div>
+      <div class="card"><div class="card-b np"><div class="tw">
+        <table><thead><tr><th>Livro</th><th>Dias Atraso</th><th>Valor</th><th>Status</th><th>Data</th></tr></thead>
+        <tbody id="mf-body"></tbody></table>
+      </div></div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- LIVRO -->
+<div id="mo-book" class="mo">
+  <div class="mo-box">
+    <div class="mo-h"><h3 class="mo-title" id="mb-title">Novo Livro</h3><button class="btn-x" onclick="closeMo('mo-book')">✕</button></div>
+    <div class="frow">
+      <div class="field"><label>Título *</label><input id="bi-title" placeholder="Título do livro"></div>
+      <div class="field"><label>Autor *</label><input id="bi-author" placeholder="Nome do autor"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>ISBN</label><input id="bi-isbn" placeholder="978-..."></div>
+      <div class="field"><label>Ano</label><input id="bi-year" type="number" placeholder="2024"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>Gênero</label>
+        <select id="bi-genre">
+          <option>Ficção Científica</option><option>Romance</option><option>Fantasia</option>
+          <option>Thriller</option><option>História</option><option>Tecnologia</option>
+          <option>Autoajuda</option><option>Clássicos</option>
+        </select>
+      </div>
+      <div class="field"><label>Exemplares</label><input id="bi-copies" type="number" placeholder="1" min="1"></div>
+    </div>
+    <div class="field"><label>Ícone de Capa</label>
+      <div class="chips" id="bk-chips"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-o btn-sm" onclick="closeMo('mo-book')">Cancelar</button>
+      <button class="btn btn-p btn-sm" onclick="saveBook()">💾 Salvar Livro</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMPRÉSTIMO -->
+<div id="mo-loan" class="mo">
+  <div class="mo-box">
+    <div class="mo-h"><h3 class="mo-title">Registrar Empréstimo</h3><button class="btn-x" onclick="closeMo('mo-loan')">✕</button></div>
+    <div class="field"><label>Livro *</label><select id="li-book"><option value="">Selecione o livro...</option></select></div>
+    <div class="field"><label>Leitor *</label><select id="li-reader"><option value="">Selecione o leitor...</option></select></div>
+    <div class="frow">
+      <div class="field"><label>Data de Saída</label><input id="li-date" type="date"></div>
+      <div class="field"><label>Devolução Prevista</label><input id="li-due" type="date"></div>
+    </div>
+    <div id="li-fine-warn" style="display:none" class="fine-box" style="margin-top:8px">
+      <p style="font-size:13px;color:var(--danger)">⚠️ Este leitor possui multas pendentes!</p>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-o btn-sm" onclick="closeMo('mo-loan')">Cancelar</button>
+      <button class="btn btn-s btn-sm" onclick="saveLoan()">✅ Registrar Empréstimo</button>
+    </div>
+  </div>
+</div>
+
+<!-- USUÁRIO -->
+<div id="mo-user" class="mo">
+  <div class="mo-box">
+    <div class="mo-h"><h3 class="mo-title">Novo Usuário</h3><button class="btn-x" onclick="closeMo('mo-user')">✕</button></div>
+    <div class="frow">
+      <div class="field"><label>Nome *</label><input id="ui-name" placeholder="Nome completo"></div>
+      <div class="field"><label>Login *</label><input id="ui-login" placeholder="login"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>Senha *</label><input id="ui-pass" type="password" placeholder="••••••••"></div>
+      <div class="field"><label>Perfil</label>
+        <select id="ui-role"><option value="leitor">Leitor</option><option value="bibliotecario">Bibliotecário</option><option value="suporte">Suporte</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Email</label><input id="ui-email" type="email" placeholder="email@exemplo.com"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-o btn-sm" onclick="closeMo('mo-user')">Cancelar</button>
+      <button class="btn btn-p btn-sm" onclick="saveUser()">➕ Criar Usuário</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETALHE LIVRO -->
+<div id="mo-detail" class="mo">
+  <div class="mo-box" style="max-width:460px">
+    <div class="mo-h"><h3 class="mo-title" id="det-title">Detalhes</h3><button class="btn-x" onclick="closeMo('mo-detail')">✕</button></div>
+    <div id="det-body"></div>
+  </div>
+</div>
+
+<!-- DETALHE MULTA -->
+<div id="mo-fine" class="mo">
+  <div class="mo-box" style="max-width:440px">
+    <div class="mo-h"><h3 class="mo-title">💰 Detalhes da Multa</h3><button class="btn-x" onclick="closeMo('mo-fine')">✕</button></div>
+    <div id="fine-body"></div>
+  </div>
+</div>
+
+<!-- PAGAR MULTA -->
+<div id="mo-pay" class="mo">
+  <div class="mo-box" style="max-width:400px">
+    <div class="mo-h"><h3 class="mo-title">💳 Registrar Pagamento</h3><button class="btn-x" onclick="closeMo('mo-pay')">✕</button></div>
+    <div id="pay-body"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-o btn-sm" onclick="closeMo('mo-pay')">Cancelar</button>
+      <button class="btn btn-s btn-sm" id="pay-confirm">✅ Confirmar Pagamento</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   DATA LAYER
+══════════════════════════════════════════════════ */
+const TODAY = new Date().toISOString().split('T')[0];
+const FINE_RATE = 0.50; // R$ por dia de atraso
+
+let USERS = [
+  {id:1,name:'Admin Suporte',login:'admin',pass:'1234',role:'suporte',email:'suporte@biblio.com',since:'Jan 2024',active:true},
+  {id:2,name:'Ana Bibliotecária',login:'ana',pass:'1234',role:'bibliotecario',email:'ana@biblio.com',since:'Mar 2024',active:true},
+  {id:3,name:'Carlos Leitor',login:'carlos',pass:'1234',role:'leitor',email:'carlos@biblio.com',since:'Jun 2024',active:true},
+  {id:4,name:'Mariana Leitora',login:'mariana',pass:'1234',role:'leitor',email:'mariana@biblio.com',since:'Jul 2024',active:true},
+];
+
+let BOOKS = [
+  {id:1,title:'Duna',author:'Frank Herbert',isbn:'978-0441172719',year:1965,genre:'Ficção Científica',copies:3,available:2,emoji:'🌍'},
+  {id:2,title:'1984',author:'George Orwell',isbn:'978-0451524935',year:1949,genre:'Ficção Científica',copies:4,available:1,emoji:'🔮'},
+  {id:3,title:'O Senhor dos Anéis',author:'J.R.R. Tolkien',isbn:'978-0618640157',year:1954,genre:'Fantasia',copies:2,available:2,emoji:'🐉'},
+  {id:4,title:'Sapiens',author:'Yuval Noah Harari',isbn:'978-0062316097',year:2011,genre:'História',copies:3,available:3,emoji:'🧠'},
+  {id:5,title:'O Código Da Vinci',author:'Dan Brown',isbn:'978-0307474278',year:2003,genre:'Thriller',copies:2,available:0,emoji:'🔥'},
+  {id:6,title:'Dom Casmurro',author:'Machado de Assis',isbn:'978-8572326424',year:1899,genre:'Clássicos',copies:5,available:4,emoji:'📖'},
+  {id:7,title:'Clean Code',author:'Robert C. Martin',isbn:'978-0132350884',year:2008,genre:'Tecnologia',copies:2,available:1,emoji:'💎'},
+  {id:8,title:'Harry Potter e a Pedra',author:'J.K. Rowling',isbn:'978-0439708180',year:1997,genre:'Fantasia',copies:4,available:3,emoji:'⚡'},
+  {id:9,title:'O Pequeno Príncipe',author:'Antoine de Saint-Exupéry',isbn:'978-0156012195',year:1943,genre:'Clássicos',copies:6,available:5,emoji:'🌙'},
+  {id:10,title:'Neuromancer',author:'William Gibson',isbn:'978-0441569595',year:1984,genre:'Ficção Científica',copies:2,available:2,emoji:'🚀'},
+];
+
+// Empréstimos — algumas datas propositalmente passadas para gerar atraso/multa
+let LOANS = [
+  {id:1,bookId:2,userId:3,book:'1984',date:'2025-01-10',due:'2025-01-24',returned:null,status:'atrasado'},
+  {id:2,bookId:5,userId:4,book:'O Código Da Vinci',date:'2025-01-05',due:'2025-01-15',returned:null,status:'atrasado'},
+  {id:3,bookId:7,userId:3,book:'Clean Code',date:'2024-12-20',due:'2025-01-03',returned:'2025-01-02',status:'devolvido'},
+  {id:4,bookId:1,userId:4,book:'Duna',date:'2025-04-10',due:'2025-04-24',returned:null,status:'ativo'},
+];
+
+// FINES — calculadas ao devolver ou manualmente
+let FINES = [
+  {id:1,loanId:1,userId:3,book:'1984',daysLate:90,amount:45.00,paid:false,date:'2025-04-24',paidDate:null},
+  {id:2,loanId:2,userId:4,book:'O Código Da Vinci',daysLate:99,amount:49.50,paid:false,date:'2025-04-24',paidDate:null},
+];
+
+let REQUESTS = [
+  {id:1,bookId:3,book:'O Senhor dos Anéis',userId:3,date:'2025-04-15',due:'2025-04-29',status:'aprovado'},
+  {id:2,bookId:4,book:'Sapiens',userId:3,date:'2025-04-18',due:null,status:'pendente'},
+];
+
+let _uid=5,_bid=11,_lid=5,_fid=3,_rid=3;
+
+/* ══════════════════════════════════════════════════
+   FINE HELPERS
+══════════════════════════════════════════════════ */
+function calcDaysLate(due){
+  if(!due) return 0;
+  const d=(new Date(TODAY)-new Date(due))/(86400000);
+  return d>0?Math.floor(d):0;
+}
+function fmtMoney(v){return'R$ '+v.toFixed(2).replace('.',',')}
+function fmtDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`}
+function addDays(date,n){const d=new Date(date);d.setDate(d.getDate()+n);return d.toISOString().split('T')[0]}
+
+// Recalc overdue status for active loans
+function syncLoanStatus(){
+  LOANS.forEach(l=>{
+    if(l.status==='ativo'&&l.due<TODAY) l.status='atrasado';
+  });
+}
+
+// Generate fines for loans returned late
+function genFineOnReturn(loan){
+  const days=calcDaysLate(loan.due);
+  if(days<=0) return null;
+  const fine={id:_fid++,loanId:loan.id,userId:loan.userId,book:loan.book,
+    daysLate:days,amount:+(days*FINE_RATE).toFixed(2),paid:false,
+    date:TODAY,paidDate:null};
+  FINES.push(fine);
+  return fine;
+}
+
+function userFineTotal(uid){
+  return FINES.filter(f=>f.userId===uid&&!f.paid).reduce((a,f)=>a+f.amount,0);
+}
+function userHasPendingFines(uid){return userFineTotal(uid)>0}
+
+/* ══════════════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════════════ */
+let _toastTimer={};
+function toast(msg,type='ok'){
+  const w=document.getElementById('toast-wrap');
+  const ico={ok:'✅',er:'❌',wa:'⚠️',in:'ℹ️'};
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span>${ico[type]||'💬'}</span><span style="flex:1">${msg}</span><span style="cursor:pointer;opacity:.6" onclick="this.parentNode.remove()">✕</span>`;
+  w.prepend(el);
+  setTimeout(()=>el&&el.remove(),4000);
+}
+
+function openMo(id){document.getElementById(id).classList.add('open')}
+function closeMo(id){document.getElementById(id).classList.remove('open')}
+window.addEventListener('click',e=>{if(e.target.classList.contains('mo'))e.target.classList.remove('open')});
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
+  document.getElementById('pg-'+id)?.classList.add('on');
+  document.querySelectorAll(`[data-page="${id}"]`).forEach(n=>n.classList.add('on'));
+  const renderers={dashboard:renderDashboard,books:renderBooks,loans:renderLoans,
+    fines:renderFines,users:renderUsers,reports:renderReports,
+    profile:renderProfile,requests:renderRequests,myfines:renderMyFines};
+  renderers[id]?.();
+}
+
+function sc(ico,label,val,color,bg,delta=''){
+  return`<div class="sc"><div class="sc-ico" style="background:${bg};color:${color}">${ico}</div>
+    <div><div class="sc-v">${val}</div><div class="sc-l">${label}</div>${delta?`<div class="sc-d" style="color:${color}">${delta}</div>`:''}</div></div>`;
+}
+
+function badge(text,cls){return`<span class="badge ${cls}">${text}</span>`}
+
+function statusBadge(s){
+  const m={ativo:['bg-ok','✅ Ativo'],atrasado:['bg-err','⏰ Atrasado'],devolvido:['bg-sec','📦 Devolvido'],
+    pendente:['bg-warn','⏳ Pendente'],aprovado:['bg-ok','✅ Aprovado'],recusado:['bg-err','❌ Recusado']};
+  return badge(...(m[s]||['bg-sec',s]));
+}
+
+const GC={'Ficção Científica':'#6C63FF','Romance':'#FF6584','Fantasia':'#43D9AD',
+  'Thriller':'#FF6B6B','História':'#FFA94D','Tecnologia':'#2196F3',
+  'Autoajuda':'#9C27B0','Clássicos':'#795548'};
+const GB={'Ficção Científica':'#ede9ff','Romance':'#ffe0e8','Fantasia':'#e6fff8',
+  'Thriller':'#ffe8e8','História':'#fff4e8','Tecnologia':'#e3f2fd',
+  'Autoajuda':'#f3e5f5','Clássicos':'#efebe9'};
+
+const ROLES={suporte:'Suporte',bibliotecario:'Bibliotecário',leitor:'Leitor'};
+const AVICO={suporte:'🛡️',bibliotecario:'📖',leitor:'👤'};
+const AVCLS={suporte:'av-p',bibliotecario:'av-b',leitor:'av-l'};
+
+/* ══════════════════════════════════════════════════
+   LOGIN / AUTH
+══════════════════════════════════════════════════ */
+let CU=null,selRole='suporte';
+
+function pickRole(role,el){
+  selRole=role;
+  document.querySelectorAll('.r-card').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function doLogin(){
+  const u=document.getElementById('l-u').value.trim();
+  const p=document.getElementById('l-p').value.trim();
+  const err=document.getElementById('login-err');
+  if(!u||!p){err.textContent='Preencha usuário e senha.';err.style.display='block';return}
+  const user=USERS.find(x=>x.login===u&&x.pass===p&&x.role===selRole&&x.active!==false);
+  if(!user){err.textContent='Credenciais inválidas ou perfil incorreto.';err.style.display='block';return}
+  err.style.display='none';
+  CU=user;
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  syncLoanStatus();
+  setupSidebar();
+}
+
+function doLogout(){
+  CU=null;
+  document.getElementById('login').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('l-u').value='';
+  document.getElementById('l-p').value='';
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('login').style.display!=='none') doLogin();
+});
+
+/* ══════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════ */
+const NAV={
+  suporte:[
+    {sec:'Principal',items:[
+      {ico:'🏠',lbl:'Dashboard',page:'dashboard'},
+      {ico:'📚',lbl:'Acervo',page:'books'},
+      {ico:'🔄',lbl:'Empréstimos',page:'loans',badge:()=>LOANS.filter(l=>l.status==='atrasado').length||null,btype:''},
+      {ico:'💰',lbl:'Multas',page:'fines',badge:()=>FINES.filter(f=>!f.paid).length||null,btype:'warn'},
+    ]},
+    {sec:'Admin',items:[
+      {ico:'👥',lbl:'Usuários',page:'users'},
+      {ico:'📊',lbl:'Relatórios',page:'reports'},
+      {ico:'👤',lbl:'Meu Perfil',page:'profile'},
+    ]},
+  ],
+  bibliotecario:[
+    {sec:'Principal',items:[
+      {ico:'🏠',lbl:'Dashboard',page:'dashboard'},
+      {ico:'📚',lbl:'Acervo',page:'books'},
+      {ico:'🔄',lbl:'Empréstimos',page:'loans',badge:()=>LOANS.filter(l=>l.status==='atrasado').length||null,btype:''},
+      {ico:'💰',lbl:'Multas',page:'fines',badge:()=>FINES.filter(f=>!f.paid).length||null,btype:'warn'},
+    ]},
+    {sec:'Gestão',items:[
+      {ico:'📊',lbl:'Relatórios',page:'reports'},
+      {ico:'👤',lbl:'Meu Perfil',page:'profile'},
+    ]},
+  ],
+  leitor:[
+    {sec:'Menu',items:[
+      {ico:'🏠',lbl:'Início',page:'dashboard'},
+      {ico:'📚',lbl:'Catálogo',page:'books'},
+      {ico:'🔄',lbl:'Empréstimos',page:'loans'},
+      {ico:'📋',lbl:'Solicitações',page:'requests',badge:()=>REQUESTS.filter(r=>r.userId===CU?.id&&r.status==='pendente').length||null,btype:''},
+      {ico:'💰',lbl:'Minhas Multas',page:'myfines',badge:()=>FINES.filter(f=>f.userId===CU?.id&&!f.paid).length||null,btype:'warn'},
+      {ico:'👤',lbl:'Meu Perfil',page:'profile'},
+    ]},
+  ],
+};
+
+function setupSidebar(){
+  document.getElementById('s-name').textContent=CU.name.split(' ').slice(0,2).join(' ');
+  document.getElementById('s-role').textContent=ROLES[CU.role];
+  const av=document.getElementById('s-av');
+  av.textContent=AVICO[CU.role]; av.className='av '+AVCLS[CU.role];
+
+  const nav=document.getElementById('sb-nav');
+  nav.innerHTML='';
+  (NAV[CU.role]||[]).forEach(sec=>{
+    const s=document.createElement('div');
+    s.innerHTML=`<div class="nav-sec-lbl">${sec.sec}</div>`;
+    sec.items.forEach(it=>{
+      const bv=it.badge?.()||null;
+      const btn=document.createElement('button');
+      btn.className='nav-item'+(it.page==='dashboard'?' on':'');
+      btn.setAttribute('data-page',it.page);
+      btn.innerHTML=`<span class="nav-ico">${it.ico}</span><span class="nav-lbl">${it.lbl}</span>${bv?`<span class="nav-badge${it.btype?' '+it.btype:''}">${bv}</span>`:''}`;
+      btn.onclick=()=>showPage(it.page);
+      s.appendChild(btn);
+    });
+    nav.appendChild(s);
+  });
+  showPage('dashboard');
+}
+
+function refreshNavBadges(){
+  (NAV[CU?.role]||[]).forEach(sec=>{
+    sec.items.forEach(it=>{
+      if(!it.badge) return;
+      const btn=document.querySelector(`[data-page="${it.page}"]`);
+      if(!btn) return;
+      const bv=it.badge()||null;
+      let nb=btn.querySelector('.nav-badge');
+      if(bv){if(!nb){nb=document.createElement('span');nb.className='nav-badge'+(it.btype?' '+it.btype:'');btn.appendChild(nb)}nb.textContent=bv;}
+      else{nb?.remove();}
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════════════ */
+function renderDashboard(){
+  syncLoanStatus();
+  const r=CU.role;
+  const myLoans=LOANS.filter(l=>l.userId===CU.id);
+  const pendFine=userFineTotal(CU.id);
+
+  document.getElementById('d-title').textContent=r==='leitor'?`Olá, ${CU.name.split(' ')[0]}! 👋`:'Dashboard';
+  document.getElementById('d-sub').textContent=r==='leitor'?'Bem-vindo ao BiblioTech':'Visão geral do sistema';
+
+  if(r==='leitor'){
+    document.getElementById('d-stats').innerHTML=
+      sc('📖','Empréstimos Ativos',myLoans.filter(l=>l.status==='ativo').length,'#6C63FF','#ede9ff')+
+      sc('⏰','Atrasados',myLoans.filter(l=>l.status==='atrasado').length,'#FF6B6B','#ffe8e8','Regularize já!')+
+      sc('✅','Devolvidos',myLoans.filter(l=>l.status==='devolvido').length,'#43D9AD','#e6fff8','Total histórico')+
+      sc('💰','Multas Pendentes',fmtMoney(pendFine),pendFine>0?'#FF6B6B':'#43D9AD',pendFine>0?'#ffe8e8':'#e6fff8');
+
+    document.getElementById('d-act').innerHTML=
+      `<button class="btn btn-p btn-sm" onclick="showPage('books')">🔍 Buscar Livros</button>
+       ${pendFine>0?`<button class="btn btn-w btn-sm" onclick="showPage('myfines')">💰 Ver Multas (${fmtMoney(pendFine)})</button>`:''}`;
+
+    document.getElementById('d-body').innerHTML=`
+      <div class="card">
+        <div class="card-h"><span class="card-t">📖 Empréstimos Ativos</span></div>
+        <div class="card-b">
+          ${myLoans.filter(l=>l.status!=='devolvido').length?myLoans.filter(l=>l.status!=='devolvido').map(l=>{
+            const days=l.status==='atrasado'?calcDaysLate(l.due):0;
+            const fine=days>0?`<span style="color:var(--danger);font-size:12px;font-weight:700"> · 💰 Multa: ${fmtMoney(days*FINE_RATE)}</span>`:'';
+            return`<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div><div style="font-weight:600;font-size:14px">${l.book}</div>
+              <div style="font-size:12px;color:var(--muted)">Devolução: ${fmtDate(l.due)}${fine}</div></div>
+              ${statusBadge(l.status)}</div>`;
+          }).join(''):'<div class="empty"><div class="ei">📭</div><h3>Nenhum empréstimo ativo</h3></div>'}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="card-t">🔥 Livros em Destaque</span></div>
+        <div class="card-b">
+          ${BOOKS.slice(0,4).map(b=>`
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openDetail(${b.id})">
+              <span style="font-size:28px">${b.emoji}</span>
+              <div style="flex:1"><div style="font-weight:600;font-size:13px">${b.title}</div><div style="font-size:12px;color:var(--muted)">${b.author}</div></div>
+              ${badge(b.available>0?'✅ Disponível':'❌ Esgotado',b.available>0?'bg-ok':'bg-err')}
+            </div>`).join('')}
+        </div>
+      </div>`;
+  } else {
+    const overdue=LOANS.filter(l=>l.status==='atrasado').length;
+    const totalFines=FINES.filter(f=>!f.paid).reduce((a,f)=>a+f.amount,0);
+    const paidFines=FINES.filter(f=>f.paid).reduce((a,f)=>a+f.amount,0);
+    document.getElementById('d-stats').innerHTML=
+      sc('📚','Total de Livros',BOOKS.length,'#6C63FF','#ede9ff',`${BOOKS.reduce((a,b)=>a+b.copies,0)} exemplares`)+
+      sc('🔄','Ativos',LOANS.filter(l=>l.status==='ativo').length,'#43D9AD','#e6fff8','Em andamento')+
+      sc('⏰','Atrasados',overdue,'#FF6B6B','#ffe8e8',overdue?'⚠️ Urgente':'✅ Em dia')+
+      sc('💰','Multas Pendentes',fmtMoney(totalFines),'#FFA94D','#fff4e8',`Arrecadado: ${fmtMoney(paidFines)}`);
+
+    document.getElementById('d-act').innerHTML=
+      `<button class="btn btn-o btn-sm" onclick="showPage('reports')">📊 Relatórios</button>
+       <button class="btn btn-p btn-sm" onclick="prepLoan(null)">➕ Empréstimo</button>`;
+
+    document.getElementById('d-body').innerHTML=`
+      <div class="card">
+        <div class="card-h"><span class="card-t">⏰ Empréstimos Recentes</span><button class="btn btn-o btn-xs" onclick="showPage('loans')">Ver todos</button></div>
+        <div class="card-b np"><div class="tw"><table>
+          <thead><tr><th>Livro</th><th>Leitor</th><th>Devolução</th><th>Status</th></tr></thead>
+          <tbody>${LOANS.slice(-5).reverse().map(l=>`<tr>
+            <td><b>${l.book}</b></td>
+            <td>${USERS.find(u=>u.id===l.userId)?.name||'—'}</td>
+            <td>${fmtDate(l.due)}</td>
+            <td>${statusBadge(l.status)}</td></tr>`).join('')}</tbody>
+        </table></div></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><span class="card-t">💰 Multas Recentes</span><button class="btn btn-o btn-xs" onclick="showPage('fines')">Ver todas</button></div>
+        <div class="card-b">
+          ${FINES.length?FINES.slice(-4).reverse().map(f=>`
+            <div class="qstat">
+              <div><div class="qstat-l">${f.book}</div>
+              <div style="font-size:12px;color:var(--muted)">${USERS.find(u=>u.id===f.userId)?.name||'—'} · ${f.daysLate} dias</div></div>
+              <div style="text-align:right">
+                <div style="font-weight:700;color:${f.paid?'var(--accent)':'var(--danger)'}">${fmtMoney(f.amount)}</div>
+                ${badge(f.paid?'✅ Pago':'⏳ Pendente',f.paid?'bg-ok':'bg-err')}
+              </div>
+            </div>`).join(''):'<div class="empty"><div class="ei">💰</div><h3>Sem multas</h3></div>'}
+        </div>
+      </div>`;
+  }
+  refreshNavBadges();
+}
+
+/* ══════════════════════════════════════════════════
+   BOOKS
+══════════════════════════════════════════════════ */
+let bkFilter='todos',bkEmoji='📚',editBkId=null;
+
+function renderBooks(){
+  const canEdit=CU.role!=='leitor';
+  document.getElementById('bk-add-btn').innerHTML=canEdit
+    ?'<button class="btn btn-p btn-sm" onclick="openAddBook()">➕ Novo Livro</button>':'';
+
+  const genres=['todos',...new Set(BOOKS.map(b=>b.genre))];
+  document.getElementById('bk-filters').innerHTML=genres.map(g=>
+    `<div class="fc${bkFilter===g?' on':''}" onclick="setBkFilter('${g}')">${g==='todos'?'📚 Todos':g}</div>`
+  ).join('');
+  filterBooks();
+}
+
+function setBkFilter(g){bkFilter=g;renderBooks()}
+
+function filterBooks(){
+  const q=(document.getElementById('bk-q')?.value||'').toLowerCase();
+  const grid=document.getElementById('bk-grid');
+  const list=BOOKS.filter(b=>
+    (bkFilter==='todos'||b.genre===bkFilter)&&
+    (b.title.toLowerCase().includes(q)||b.author.toLowerCase().includes(q))
+  );
+  grid.innerHTML=list.length?list.map(b=>`
+    <div class="bk-card" onclick="openDetail(${b.id})">
+      <div class="bk-cover" style="background:${GB[b.genre]||'#f0f0f0'}">
+        <span style="filter:drop-shadow(0 4px 8px rgba(0,0,0,.2))">${b.emoji}</span>
+        <span class="bk-avail">${badge(b.available>0?`✅ ${b.available}`:'❌ Esgot.',b.available>0?'bg-ok':'bg-err')}</span>
+      </div>
+      <div class="bk-info">
+        <div class="bk-title">${b.title}</div>
+        <div class="bk-auth">${b.author} · ${b.year}</div>
+        <span class="badge" style="background:${GB[b.genre]||'#f0f0f0'};color:${GC[b.genre]||'#666'};font-size:11px">${b.genre}</span>
+      </div>
+    </div>`).join(''):`<div class="empty" style="grid-column:1/-1"><div class="ei">🔍</div><h3>Nenhum livro encontrado</h3></div>`;
+}
+
+function openDetail(id){
+  const b=BOOKS.find(x=>x.id===id); if(!b) return;
+  document.getElementById('det-title').textContent=b.title;
+  const myLoan=LOANS.find(l=>l.bookId===id&&l.userId===CU.id&&l.status!=='devolvido');
+  const canReq=CU.role==='leitor'&&!myLoan&&b.available>0;
+  const hasFine=userHasPendingFines(CU.id);
+
+  document.getElementById('det-body').innerHTML=`
+    <div style="text-align:center;padding:24px;background:${GB[b.genre]||'#f0f0f0'};border-radius:14px;margin-bottom:20px;font-size:72px">${b.emoji}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      ${['✍️ Autor|'+b.author,'📅 Ano|'+b.year,'🏷️ Gênero|'+b.genre,'🔖 ISBN|'+(b.isbn||'—'),'📦 Exemplares|'+b.copies,'✅ Disponíveis|'+b.available].map(s=>{
+        const[l,v]=s.split('|');
+        return`<div style="background:var(--bg);border-radius:10px;padding:10px 12px"><div style="font-size:11px;color:var(--muted)">${l}</div><div style="font-weight:600;font-size:14px">${v}</div></div>`;
+      }).join('')}
+    </div>
+    ${hasFine&&CU.role==='leitor'?`<div class="fine-box"><div class="fine-val">${fmtMoney(userFineTotal(CU.id))}</div><div class="fine-desc">⚠️ Você possui multas pendentes. Regularize antes de solicitar empréstimos.</div></div>`:''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${CU.role==='leitor'&&canReq&&!hasFine?`<button class="btn btn-s btn-sm" onclick="reqBook(${b.id});closeMo('mo-detail')">📋 Solicitar</button>`:''}
+      ${CU.role==='leitor'&&canReq&&hasFine?`<button class="btn btn-o btn-sm" disabled style="opacity:.5">🚫 Multa pendente</button>`:''}
+      ${CU.role==='leitor'&&myLoan?`<button class="btn btn-w btn-sm" onclick="returnBook(${myLoan.id});closeMo('mo-detail')">🔄 Devolver</button>`:''}
+      ${CU.role==='leitor'&&!canReq&&!myLoan&&!hasFine?`<button class="btn btn-o btn-sm" disabled style="opacity:.5">📭 Indisponível</button>`:''}
+      ${CU.role!=='leitor'?`<button class="btn btn-p btn-sm" onclick="openEditBook(${b.id});closeMo('mo-detail')">✏️ Editar</button>
+        <button class="btn btn-s btn-sm" onclick="prepLoan(${b.id});closeMo('mo-detail')">🔄 Emprestar</button>`:''}
+    </div>`;
+  openMo('mo-detail');
+}
+
+function openAddBook(){
+  editBkId=null;
+  document.getElementById('mb-title').textContent='Novo Livro';
+  ['bi-title','bi-author','bi-isbn','bi-year','bi-copies'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('bi-genre').value='Ficção Científica';
+  buildChips('📚');
+  openMo('mo-book');
+}
+
+function openEditBook(id){
+  const b=BOOKS.find(x=>x.id===id); editBkId=id;
+  document.getElementById('mb-title').textContent='Editar Livro';
+  document.getElementById('bi-title').value=b.title;
+  document.getElementById('bi-author').value=b.author;
+  document.getElementById('bi-isbn').value=b.isbn||'';
+  document.getElementById('bi-year').value=b.year;
+  document.getElementById('bi-genre').value=b.genre;
+  document.getElementById('bi-copies').value=b.copies;
+  buildChips(b.emoji);
+  openMo('mo-book');
+}
+
+const EMOJIS=['📚','📖','🔥','⚡','🌍','🚀','🎭','🧬','🏛️','🌙','🦁','🌊','🎪','🔮','💎','🗡️','🌺','🎵','🐉','🧠','🏆','🌈','🎯','🔬'];
+function buildChips(sel){
+  bkEmoji=sel;
+  document.getElementById('bk-chips').innerHTML=EMOJIS.map(e=>
+    `<div class="chip${e===sel?' on':''}" onclick="pickEmoji('${e}',this)">${e}</div>`
+  ).join('');
+}
+function pickEmoji(e,el){bkEmoji=e;document.querySelectorAll('#bk-chips .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on')}
+
+function saveBook(){
+  const title=document.getElementById('bi-title').value.trim();
+  const author=document.getElementById('bi-author').value.trim();
+  if(!title||!author){toast('Preencha título e autor','wa');return}
+  const copies=parseInt(document.getElementById('bi-copies').value)||1;
+  if(editBkId){
+    const b=BOOKS.find(x=>x.id===editBkId);
+    const diff=copies-b.copies;
+    Object.assign(b,{title,author,isbn:document.getElementById('bi-isbn').value,
+      year:parseInt(document.getElementById('bi-year').value)||2024,
+      genre:document.getElementById('bi-genre').value,copies,emoji:bkEmoji,
+      available:Math.max(0,b.available+diff)});
+    toast('Livro atualizado!');
+  } else {
+    BOOKS.push({id:_bid++,title,author,isbn:document.getElementById('bi-isbn').value,
+      year:parseInt(document.getElementById('bi-year').value)||2024,
+      genre:document.getElementById('bi-genre').value,copies,available:copies,emoji:bkEmoji});
+    toast('Livro adicionado ao acervo!');
+  }
+  closeMo('mo-book');renderBooks();
+}
+
+/* ══════════════════════════════════════════════════
+   LOANS
+══════════════════════════════════════════════════ */
+let lnTab='ativos';
+
+function renderLoans(){
+  syncLoanStatus();
+  const r=CU.role;
+  document.getElementById('ln-act').innerHTML=r!=='leitor'
+    ?'<button class="btn btn-p btn-sm" onclick="prepLoan(null)">➕ Novo Empréstimo</button>':'';
+
+  const tabs=[{l:'Ativos',v:'ativos'},{l:'Atrasados',v:'atrasados'},{l:'Devolvidos',v:'devolvido'}];
+  document.getElementById('ln-tabs').innerHTML=tabs.map(t=>{
+    const cnt=t.v==='atrasados'?LOANS.filter(l=>l.status==='atrasado'&&(r==='leitor'?l.userId===CU.id:true)).length:0;
+    return`<button class="tab${lnTab===t.v?' on':''}" onclick="setLnTab('${t.v}')">${t.l}${cnt?` <span style="background:var(--danger);color:#fff;border-radius:99px;padding:1px 7px;font-size:11px">${cnt}</span>`:''}`;
+  }).join('');
+
+  let loans=LOANS.filter(l=>r==='leitor'?l.userId===CU.id:true);
+  if(lnTab==='ativos') loans=loans.filter(l=>l.status==='ativo');
+  else if(lnTab==='atrasados') loans=loans.filter(l=>l.status==='atrasado');
+  else loans=loans.filter(l=>l.status==='devolvido');
+
+  const showReader=r!=='leitor';
+  const showFine=lnTab==='atrasados';
+
+  document.getElementById('ln-head').innerHTML=`<tr>
+    <th>Livro</th>${showReader?'<th>Leitor</th>':''}<th>Saída</th><th>Devolução</th>
+    ${showFine?'<th>Atraso</th><th>Multa Est.</th>':''}
+    ${lnTab==='devolvido'?'<th>Devolvido em</th>':''}
+    <th>Status</th>${lnTab!=='devolvido'?'<th>Ações</th>':''}</tr>`;
+
+  document.getElementById('ln-body').innerHTML=loans.length?loans.map(l=>{
+    const days=l.status==='atrasado'?calcDaysLate(l.due):0;
+    const estFine=days>0?fmtMoney(days*FINE_RATE):'—';
+    return`<tr>
+      <td><b>${l.book}</b></td>
+      ${showReader?`<td><div style="display:flex;align-items:center;gap:8px"><div class="av ${AVCLS[USERS.find(u=>u.id===l.userId)?.role||'leitor']}" style="width:28px;height:28px;font-size:13px">${AVICO[USERS.find(u=>u.id===l.userId)?.role||'leitor']}</div>${USERS.find(u=>u.id===l.userId)?.name||'—'}</div></td>`:''}
+      <td>${fmtDate(l.date)}</td><td>${fmtDate(l.due)}</td>
+      ${showFine?`<td><b style="color:var(--danger)">${days} dias</b></td><td><b style="color:var(--danger)">${estFine}</b></td>`:''}
+      ${lnTab==='devolvido'?`<td>${fmtDate(l.returned)}</td>`:''}
+      <td>${statusBadge(l.status)}</td>
+      ${lnTab!=='devolvido'?`<td><button class="btn btn-w btn-xs" onclick="returnBook(${l.id})">🔄 Devolver</button></td>`:''}
+    </tr>`;
+  }).join(''):`<tr><td colspan="10"><div class="empty"><div class="ei">📭</div><h3>Nenhum empréstimo aqui</h3></div></td></tr>`;
+  refreshNavBadges();
+}
+
+function setLnTab(t){lnTab=t;renderLoans()}
+
+function prepLoan(bookId){
+  const avBooks=BOOKS.filter(b=>b.available>0);
+  document.getElementById('li-book').innerHTML='<option value="">Selecione o livro...</option>'+avBooks.map(b=>`<option value="${b.id}">${b.book||b.title} (${b.available} disp.)</option>`).join('').replace(/b\.book/g,'b.title');
+  document.getElementById('li-book').innerHTML='<option value="">Selecione o livro...</option>'+avBooks.map(b=>`<option value="${b.id}">${b.title} (${b.available} disp.)</option>`).join('');
+  if(bookId) document.getElementById('li-book').value=bookId;
+  document.getElementById('li-reader').innerHTML='<option value="">Selecione o leitor...</option>'+USERS.filter(u=>u.role==='leitor'&&u.active).map(u=>{
+    const pf=userFineTotal(u.id);
+    return`<option value="${u.id}">${u.name}${pf>0?' ⚠️ Multa: '+fmtMoney(pf):''}`;
+  }).join('');
+  document.getElementById('li-date').value=TODAY;
+  document.getElementById('li-due').value=addDays(TODAY,14);
+  document.getElementById('li-fine-warn').style.display='none';
+  document.getElementById('li-reader').onchange=function(){
+    const uid=parseInt(this.value);
+    document.getElementById('li-fine-warn').style.display=uid&&userHasPendingFines(uid)?'block':'none';
+  };
+  openMo('mo-loan');
+}
+
+function saveLoan(){
+  const bookId=parseInt(document.getElementById('li-book').value);
+  const userId=parseInt(document.getElementById('li-reader').value);
+  if(!bookId||!userId){toast('Selecione livro e leitor','wa');return}
+  const book=BOOKS.find(b=>b.id===bookId);
+  const user=USERS.find(u=>u.id===userId);
+  if(book.available<=0){toast('Livro sem exemplares disponíveis','er');return}
+  book.available--;
+  LOANS.push({id:_lid++,bookId,userId,book:book.title,
+    date:document.getElementById('li-date').value,
+    due:document.getElementById('li-due').value,
+    returned:null,status:'ativo'});
+  toast(`Empréstimo de "${book.title}" registrado para ${user.name}!`);
+  closeMo('mo-loan');renderLoans();renderDashboard();
+}
+
+function returnBook(loanId){
+  const l=LOANS.find(x=>x.id===loanId); if(!l) return;
+  const wasDue=l.due;
+  l.status='devolvido';
+  l.returned=TODAY;
+  const b=BOOKS.find(x=>x.id===l.bookId);
+  if(b) b.available++;
+
+  const fine=genFineOnReturn(l);
+  if(fine){
+    toast(`📦 "${l.book}" devolvido! ⚠️ Multa gerada: ${fmtMoney(fine.amount)} (${fine.daysLate} dias de atraso)`,'wa');
+  } else {
+    toast(`"${l.book}" devolvido com sucesso! ✅`,'ok');
+  }
+  renderLoans();renderDashboard();refreshNavBadges();
+}
+
+function reqBook(bookId){
+  const b=BOOKS.find(x=>x.id===bookId);
+  if(!b||b.available===0){toast('Livro indisponível','er');return}
+  if(userHasPendingFines(CU.id)){toast('Regularize suas multas antes de solicitar','er');return}
+  REQUESTS.push({id:_rid++,bookId,book:b.title,userId:CU.id,
+    date:TODAY,due:addDays(TODAY,14),status:'pendente'});
+  toast(`Solicitação para "${b.title}" enviada!`);
+  refreshNavBadges();
+}
+
+/* ══════════════════════════════════════════════════
+   FINES (admin/bibliotecário)
+══════════════════════════════════════════════════ */
+function renderFines(){
+  syncLoanStatus();
+  const totalPend=FINES.filter(f=>!f.paid).reduce((a,f)=>a+f.amount,0);
+  const totalPaid=FINES.filter(f=>f.paid).reduce((a,f)=>a+f.amount,0);
+  const countPend=FINES.filter(f=>!f.paid).length;
+
+  document.getElementById('fn-stats').innerHTML=
+    sc('⏳','Multas Pendentes',countPend,'#FF6B6B','#ffe8e8')+
+    sc('💰','Valor Pendente',fmtMoney(totalPend),'#FF6B6B','#ffe8e8','A receber')+
+    sc('✅','Valor Arrecadado',fmtMoney(totalPaid),'#43D9AD','#e6fff8','Recebido')+
+    sc('📊','Total de Multas',FINES.length,'#6C63FF','#ede9ff',`Taxa: ${fmtMoney(FINE_RATE)}/dia`);
+
+  // Also check for overdue loans without fines yet
+  const autoFineHint=LOANS.filter(l=>l.status==='atrasado').length;
+  document.getElementById('fn-act').innerHTML=`
+    ${autoFineHint?`<span style="font-size:12px;color:var(--danger);background:#ffe8e8;padding:6px 12px;border-radius:8px">⚠️ ${autoFineHint} empréstimo(s) em atraso</span>`:''}
+    <button class="btn btn-w btn-sm" onclick="genAllFines()">⚡ Gerar Multas Pendentes</button>`;
+
+  filterFines();
+}
+
+function filterFines(){
+  const q=(document.getElementById('fn-q')?.value||'').toLowerCase();
+  const list=FINES.filter(f=>{
+    const u=USERS.find(x=>x.id===f.userId);
+    return!q||(u?.name.toLowerCase().includes(q)||f.book.toLowerCase().includes(q));
+  });
+
+  document.getElementById('fn-head').innerHTML=`<tr><th>Leitor</th><th>Livro</th><th>Dias Atraso</th><th>Valor</th><th>Status</th><th>Data Geração</th><th>Ações</th></tr>`;
+  document.getElementById('fn-body').innerHTML=list.length?list.map(f=>{
+    const u=USERS.find(x=>x.id===f.userId);
+    return`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-l" style="width:28px;height:28px;font-size:13px">👤</div>${u?.name||'—'}</div></td>
+      <td><b>${f.book}</b></td>
+      <td><b style="color:var(--danger)">${f.daysLate} dias</b></td>
+      <td><b style="color:${f.paid?'var(--accent)':'var(--danger)'}; font-size:15px">${fmtMoney(f.amount)}</b></td>
+      <td>${f.paid?badge('✅ Pago','bg-ok'):badge('⏳ Pendente','bg-err')}</td>
+      <td>${fmtDate(f.date)}${f.paidDate?`<br><span style="font-size:11px;color:var(--muted)">Pago: ${fmtDate(f.paidDate)}</span>`:''}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-o btn-xs" onclick="openFineDetail(${f.id})">🔍</button>
+          ${!f.paid?`<button class="btn btn-s btn-xs" onclick="openPayFine(${f.id})">💳 Pagar</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="7"><div class="empty"><div class="ei">💰</div><h3>Nenhuma multa encontrada</h3></div></td></tr>`;
+  refreshNavBadges();
+}
+
+function openFineDetail(fid){
+  const f=FINES.find(x=>x.id===fid); if(!f) return;
+  const u=USERS.find(x=>x.id===f.userId);
+  document.getElementById('fine-body').innerHTML=`
+    <div class="fine-box${f.paid?' paid':''}">
+      <div class="fine-val${f.paid?' paid':''}">${fmtMoney(f.amount)}</div>
+      <div class="fine-desc">${f.paid?'✅ Multa paga':'⏳ Aguardando pagamento'}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${[['👤 Leitor',u?.name||'—'],['📖 Livro',f.book],['📅 Gerada em',fmtDate(f.date)],
+        ['⏰ Dias de Atraso',f.daysLate+' dias'],['💰 Taxa/dia',fmtMoney(FINE_RATE)],
+        ['✅ Pago em',fmtDate(f.paidDate)]].map(([l,v])=>
+        `<div style="background:var(--bg);border-radius:10px;padding:10px 12px"><div style="font-size:11px;color:var(--muted)">${l}</div><div style="font-weight:600;font-size:13px">${v}</div></div>`
+      ).join('')}
+    </div>`;
+  openMo('mo-fine');
+}
+
+function openPayFine(fid){
+  const f=FINES.find(x=>x.id===fid); if(!f) return;
+  const u=USERS.find(x=>x.id===f.userId);
+  document.getElementById('pay-body').innerHTML=`
+    <div class="fine-box">
+      <div class="fine-val">${fmtMoney(f.amount)}</div>
+      <div class="fine-desc">Multa de ${u?.name} — ${f.book} (${f.daysLate} dias de atraso)</div>
+    </div>
+    <div class="field"><label>Forma de Pagamento</label>
+      <select id="pay-method"><option>Dinheiro</option><option>Cartão de Débito</option><option>Cartão de Crédito</option><option>PIX</option></select>
+    </div>
+    <div class="field"><label>Observações</label><textarea id="pay-obs" placeholder="Opcional..."></textarea></div>`;
+  document.getElementById('pay-confirm').onclick=()=>payFine(fid);
+  openMo('mo-pay');
+}
+
+function payFine(fid){
+  const f=FINES.find(x=>x.id===fid); if(!f) return;
+  f.paid=true; f.paidDate=TODAY;
+  toast(`Multa de ${fmtMoney(f.amount)} registrada como paga! ✅`);
+  closeMo('mo-pay');renderFines();renderDashboard();refreshNavBadges();
+}
+
+function genAllFines(){
+  const overdue=LOANS.filter(l=>l.status==='atrasado');
+  let count=0;
+  overdue.forEach(l=>{
+    const already=FINES.find(f=>f.loanId===l.id&&!f.paid);
+    if(!already){
+      const days=calcDaysLate(l.due);
+      if(days>0){
+        FINES.push({id:_fid++,loanId:l.id,userId:l.userId,book:l.book,
+          daysLate:days,amount:+(days*FINE_RATE).toFixed(2),paid:false,date:TODAY,paidDate:null});
+        count++;
+      }
+    }
+  });
+  if(count) toast(`${count} multa(s) gerada(s) automaticamente!`,'wa');
+  else toast('Nenhuma multa nova a gerar','in');
+  renderFines();refreshNavBadges();
+}
+
+/* ══════════════════════════════════════════════════
+   MY FINES (leitor)
+══════════════════════════════════════════════════ */
+function renderMyFines(){
+  const myFines=FINES.filter(f=>f.userId===CU.id);
+  const pend=myFines.filter(f=>!f.paid).reduce((a,f)=>a+f.amount,0);
+  const paid=myFines.filter(f=>f.paid).reduce((a,f)=>a+f.amount,0);
+
+  document.getElementById('mf-stats').innerHTML=
+    sc('⏳','Pendente',fmtMoney(pend),pend>0?'#FF6B6B':'#43D9AD',pend>0?'#ffe8e8':'#e6fff8',pend>0?'Regularize!':'Tudo certo!')+
+    sc('✅','Pago',fmtMoney(paid),'#43D9AD','#e6fff8','Total pago')+
+    sc('📋','Total de Multas',myFines.length,'#6C63FF','#ede9ff','Histórico');
+
+  document.getElementById('mf-body').innerHTML=myFines.length?myFines.map(f=>`
+    <tr>
+      <td><b>${f.book}</b></td>
+      <td><b style="color:var(--danger)">${f.daysLate} dias</b></td>
+      <td><b style="font-size:15px;color:${f.paid?'var(--accent)':'var(--danger)'}">${fmtMoney(f.amount)}</b></td>
+      <td>${f.paid?badge('✅ Pago','bg-ok'):badge('⏳ Pendente','bg-err')}</td>
+      <td>${fmtDate(f.date)}${f.paidDate?`<br><small style="color:var(--muted)">Pago: ${fmtDate(f.paidDate)}</small>`:''}</td>
+    </tr>`).join(''):`<tr><td colspan="5"><div class="empty"><div class="ei">✅</div><h3>Sem multas!</h3><p>Continue assim 😊</p></div></td></tr>`;
+}
+
+/* ══════════════════════════════════════════════════
+   USERS
+══════════════════════════════════════════════════ */
+function renderUsers(){
+  document.getElementById('us-body').innerHTML=USERS.map(u=>{
+    const loans=LOANS.filter(l=>l.userId===u.id).length;
+    const fine=userFineTotal(u.id);
+    return`<tr>
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div class="av ${AVCLS[u.role]}" style="width:34px;height:34px;font-size:15px">${AVICO[u.role]}</div>
+        <div><div style="font-weight:600">${u.name}</div><div style="font-size:12px;color:var(--muted)">${u.email}</div></div>
+      </div></td>
+      <td>${badge(ROLES[u.role],'bg-p')}</td>
+      <td>${badge(u.active?'Ativo':'Inativo',u.active?'bg-ok':'bg-sec')}</td>
+      <td>${loans}</td>
+      <td>${fine>0?`<b style="color:var(--danger)">${fmtMoney(fine)}</b>`:'<span style="color:var(--muted)">—</span>'}</td>
+      <td>${u.since}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-o btn-xs" onclick="toast('Em breve…','in')">✏️</button>
+        <button class="btn btn-xs ${u.active?'btn-d':'btn-s'}" onclick="toggleUser(${u.id})">${u.active?'🚫 Desativar':'✅ Ativar'}</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleUser(id){
+  const u=USERS.find(x=>x.id===id);
+  if(u.id===CU.id){toast('Não é possível desativar sua conta','wa');return}
+  u.active=!u.active;
+  toast(`Usuário ${u.active?'ativado':'desativado'}`,u.active?'ok':'wa');
+  renderUsers();
+}
+
+function saveUser(){
+  const name=document.getElementById('ui-name').value.trim();
+  const login=document.getElementById('ui-login').value.trim();
+  const pass=document.getElementById('ui-pass').value.trim();
+  if(!name||!login||!pass){toast('Campos obrigatórios não preenchidos','wa');return}
+  if(USERS.find(u=>u.login===login)){toast('Login já existe','er');return}
+  USERS.push({id:_uid++,name,login,pass,role:document.getElementById('ui-role').value,
+    email:document.getElementById('ui-email').value,since:'Abr 2025',active:true});
+  toast(`Usuário "${name}" criado!`);
+  closeMo('mo-user');renderUsers();
+}
+
+/* ══════════════════════════════════════════════════
+   REPORTS
+══════════════════════════════════════════════════ */
+function renderReports(){
+  const totalFines=FINES.reduce((a,f)=>a+f.amount,0);
+  const paidFines=FINES.filter(f=>f.paid).reduce((a,f)=>a+f.amount,0);
+  const pendFines=FINES.filter(f=>!f.paid).reduce((a,f)=>a+f.amount,0);
+
+  document.getElementById('rp-stats').innerHTML=
+    sc('📚','Acervo',`${BOOKS.length} títulos`,'#6C63FF','#ede9ff',`${BOOKS.reduce((a,b)=>a+b.copies,0)} exemplares`)+
+    sc('🔄','Total Empréstimos',LOANS.length,'#43D9AD','#e6fff8','Histórico completo')+
+    sc('💰','Multas Geradas',fmtMoney(totalFines),'#FFA94D','#fff4e8',`Pend: ${fmtMoney(pendFines)}`)+
+    sc('✅','Arrecadado',fmtMoney(paidFines),'#43D9AD','#e6fff8','Total recebido');
+
+  // Genre bar chart
+  const gc={};BOOKS.forEach(b=>gc[b.genre]=(gc[b.genre]||0)+1);
+  const maxG=Math.max(...Object.values(gc));
+  document.getElementById('rp-genre').innerHTML=Object.entries(gc).sort((a,b)=>b[1]-a[1]).map(([g,n])=>`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px">
+        <span style="font-weight:600">${g}</span><span style="color:var(--muted)">${n} livro${n>1?'s':''}</span>
+      </div>
+      <div class="pb"><div class="pb-fill" style="width:${Math.round(n/maxG*100)}%;background:${GC[g]||'#6C63FF'}"></div></div>
+    </div>`).join('');
+
+  // Month chart
+  const months=['Out','Nov','Dez','Jan','Fev','Mar'];
+  const vals=[9,14,8,17,12,LOANS.length];
+  const maxM=Math.max(...vals);
+  document.getElementById('rp-months').innerHTML=`
+    <div style="display:flex;align-items:flex-end;gap:10px;height:140px;padding-top:16px">
+      ${months.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+        <span style="font-size:11px;color:var(--muted);font-weight:600">${vals[i]}</span>
+        <div style="width:100%;background:linear-gradient(180deg,#6C63FF,#9b8eff);border-radius:6px 6px 0 0;height:${Math.max(Math.round(vals[i]/maxM*100),8)}%;min-height:8px;transition:.5s ease"></div>
+        <span style="font-size:11px;color:var(--muted)">${m}</span></div>`).join('')}
+    </div>`;
+
+  // Fine by month
+  const fvals=[2,5,3,8,6,FINES.length];
+  const maxF=Math.max(...fvals);
+  document.getElementById('rp-fines').innerHTML=`
+    <div style="display:flex;align-items:flex-end;gap:10px;height:140px;padding-top:16px">
+      ${months.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+        <span style="font-size:11px;color:var(--muted);font-weight:600">${fvals[i]}</span>
+        <div style="width:100%;background:linear-gradient(180deg,#FF6B6B,#ff9090);border-radius:6px 6px 0 0;height:${Math.max(Math.round(fvals[i]/maxF*100),8)}%;min-height:8px;transition:.5s ease"></div>
+        <span style="font-size:11px;color:var(--muted)">${m}</span></div>`).join('')}
+    </div>`;
+
+  // Top books
+  const lc={};LOANS.forEach(l=>lc[l.bookId]=(lc[l.bookId]||0)+1);
+  const top=BOOKS.map(b=>({...b,cnt:lc[b.id]||0})).sort((a,b)=>b.cnt-a.cnt);
+  document.getElementById('rp-top').innerHTML=top.map((b,i)=>`
+    <tr>
+      <td><span style="font-weight:800;color:${i<3?'#FFA94D':'var(--muted)'}">#${i+1}</span></td>
+      <td><span style="font-size:18px">${b.emoji}</span> <b>${b.title}</b><br><span style="font-size:12px;color:var(--muted)">${b.author}</span></td>
+      <td><b>${b.cnt}</b></td>
+    </tr>`).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   PROFILE
+══════════════════════════════════════════════════ */
+function renderProfile(){
+  const u=CU;
+  const myLoans=LOANS.filter(l=>l.userId===u.id);
+  const pend=userFineTotal(u.id);
+  document.getElementById('pf-info').innerHTML=`
+    <div style="text-align:center;padding:24px 0 28px">
+      <div class="av ${AVCLS[u.role]}" style="width:80px;height:80px;border-radius:50%;font-size:38px;margin:0 auto 14px">${AVICO[u.role]}</div>
+      <h3 style="font-size:20px;font-weight:800">${u.name}</h3>
+      <p style="color:var(--muted);margin-top:4px;font-size:13px">${u.email}</p>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">${badge(ROLES[u.role],'bg-p')}${badge('Ativo','bg-ok')}</div>
+    </div>
+    <div class="div"><hr><span>Estatísticas</span><hr></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+      ${[['🔄 Empréstimos',myLoans.length],['✅ Devolvidos',myLoans.filter(l=>l.status==='devolvido').length],
+        ['⏰ Em Atraso',myLoans.filter(l=>l.status==='atrasado').length],
+        ['💰 Multas Pend.',pend>0?fmtMoney(pend):'Nenhuma']].map(([l,v])=>
+        `<div style="background:var(--bg);border-radius:10px;padding:10px 12px"><div style="font-size:11px;color:var(--muted)">${l}</div><div style="font-weight:700;font-size:15px">${v}</div></div>`
+      ).join('')}
+    </div>
+    ${pend>0?`<div class="fine-box" style="margin-top:16px"><div class="fine-val">${fmtMoney(pend)}</div><div class="fine-desc">Multa(s) pendente(s) — regularize para novos empréstimos</div></div>`:''}`;
+
+  document.getElementById('pf-hist').innerHTML=myLoans.length?myLoans.map(l=>`
+    <div class="tl-it">
+      <div class="tl-dot" style="background:${l.status==='devolvido'?'#43D9AD':l.status==='atrasado'?'#FF6B6B':'#6C63FF'};border-color:${l.status==='devolvido'?'#43D9AD':l.status==='atrasado'?'#FF6B6B':'#6C63FF'}"></div>
+      <div><div class="tl-t">${l.book}</div>
+      <div class="tl-m">Retirada: ${fmtDate(l.date)} · Devolução: ${fmtDate(l.due)}</div>
+      <div style="margin-top:5px">${statusBadge(l.status)}</div></div>
+    </div>`).join(''):`<div class="empty"><div class="ei">📭</div><h3>Sem histórico</h3></div>`;
+}
+
+/* ══════════════════════════════════════════════════
+   REQUESTS (leitor)
+══════════════════════════════════════════════════ */
+function renderRequests(){
+  const my=REQUESTS.filter(r=>r.userId===CU.id);
+  document.getElementById('rq-body').innerHTML=my.length?my.map(r=>`
+    <tr>
+      <td><b>${r.book}</b></td>
+      <td>${fmtDate(r.date)}</td>
+      <td>${fmtDate(r.due)}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>${r.status==='pendente'?`<button class="btn btn-d btn-xs" onclick="cancelReq(${r.id})">Cancelar</button>`:''}</td>
+    </tr>`).join(''):`<tr><td colspan="5"><div class="empty"><div class="ei">📋</div><h3>Nenhuma solicitação</h3><p>Acesse o catálogo para solicitar livros</p></div></td></tr>`;
+}
+
+function cancelReq(id){
+  REQUESTS=REQUESTS.filter(r=>r.id!==id);
+  toast('Solicitação cancelada','wa');renderRequests();refreshNavBadges();
+}
+</script>
+</body>
+</html>
+
